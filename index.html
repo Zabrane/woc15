@@ -208,7 +208,8 @@ private async Task SnapAndPostAsync () {
         </section>
 
         <section>
-          <p>Javascript does not have async/await (yet).
+          <h2>The JavaScript approach</h2>
+          <p>JavaScript does not have async/await (yet).
           <p>But <strong>we can build an equivalent from scratch</strong> using:
           <ol>
             <li>Promises</li>
@@ -226,9 +227,86 @@ private async Task SnapAndPostAsync () {
 
 
         <section>
-          <h2>Other languages</h2>
+          <h2>Can I throw away my callbacks today?</h2>
         </section>
 
+        <section>
+          <h2>JavaScript</h2>
+          <ul>
+<li>Promises: any library following the specification (beware of jQuery). </li>
+<li>Generators: EcmaScript 6. </li>
+<li>Async/await: syntactic sugar, proposed for EcmaScript 7. </li>
+<li>Compiler from ES6 to ES5 available. <small>(if you don't mind using Facebook's code)</small></li>
+</ul>
+        </section>
+
+        <section>
+          <h2>Python</h2>
+          <ul>
+<li>PEP 255 - Simple Generators.</li>
+<li>[…]</li>
+<li>PEP 3148 - futures - execute computations asynchronously.</li>
+<li>PEP 3156 - Asynchronous IO Support Rebooted: <quote>“a coroutine is a generator that follows certain conventions”</quote>.</li>
+</ul>
+        </section>
+
+<section>
+<h2>C#</h2>
+<p>Async/await
+<p>(added to the language)</p>
+</section>
+
+<section>
+<h2>F#</h2>
+<p>Async/await
+<p>(implemented on top of<br>“computation expressions”)</p>
+</section>
+
+<section>
+<h2>Scala</h2>
+<p>SIP-22 — Async/await
+<p>(implemented as a macro<br>doing an ANF translation<br>towards the futures API)</p>
+</section>
+
+<section>
+<h2>Dart</h2>
+<p>Async/await
+<p>(compiled to JavaScript)</p>
+</section>
+
+<section>
+<h2>Java</h2>
+<p>Not quite there yet.</p>
+<p>Futures available in the standard library.</p>
+<p>Third-party libraries modifying bytecode to implement coroutines (Kilim,
+Quasar, …).</p>
+</section>
+
+<section>
+<h2>C++</h2>
+<p>C++11 introduces std::future and std::async.</p>
+<p>But this <strong>not</strong> async/await.</p>
+<p>“N4286 — Resumable Functions”<br>(async/await, implemented in Visual C++).</p>
+<p><small>(Or use a source-to-source compiler such as Tamer.)</small></p>
+</section>
+
+<section>
+<h2>C</h2>
+<p>Many (non-portable) efficient coroutine libraries.
+<p>A few macro-based hacks (protothreads).
+<p>But seriously, what did you expect?
+<p><small>(Or use a source-to-source compiler such as Continuation-Passing C.)</small></p>
+</section>
+
+<section>
+<h2>Conclusion</h2>
+</section>
+
+<section>
+<p>You shouldn't be doing your compiler's job.
+<p>Friends don't let friends use callbacks.
+<p>Solutions exist:<br>learn them, improve them, educate others.
+</section>
 
         <!--
         <section>
@@ -570,6 +648,7 @@ Reveal.addEventListener( 'customevent', function() {
         progress: true,
         history: true,
         center: true,
+        slideNumber: true,
 
         transition: 'none', // none/fade/slide/convex/concave/zoom
 
