@@ -49,6 +49,187 @@
           </p>
         </section>
 
+        <section>
+          <h2>Disclaimer</h2>
+          <p>The opinions expressed in this tutorial are those of the author, and do not
+          necessarily reflect the official position of his employer.</p>
+        </section>
+
+        <section>
+          <h2>Callbacks</h2>
+          <pre><code data-trim >
+function getPhoto(tag) {
+    var photoList  = syncGet(requestTag(tag));
+    var photoSizes = syncGet(requestOneFrom(photoList));
+    return sizesToPhoto(photoSizes);
+}
+
+drawOnScreen(getPhoto('tokyo'));
+          </code></pre>
+          <pre class="fragment"><code data-trim >
+function getPhoto(tag, handlerCallback) {
+  asyncGet(requestTag(tag), function(photoList) {
+    asyncGet(requestOneFrom(photoList), function(photoSizes) {
+      handlerCallback(sizesToPhoto(photoSizes));
+    });
+  });
+}
+
+getPhoto('tokyo', drawOnScreen);
+          </code></pre>
+          <p style="text-align: right;"><small>
+            <em>Escape from Callback Hell, or Callbacks are the modern goto</em><br>
+            Evan Czaplicki</small>
+        </section>
+
+        <section>
+          <h2>“Callback hell”</h2>
+          <pre style="font-size: small;"><code data-trim >
+fs.readdir(source, function(err, files) {
+  if (err) {
+    console.log('Error finding files: ' + err)
+  } else {
+    files.forEach(function(filename, fileIndex) {
+      console.log(filename)
+      gm(source + filename).size(function(err, values) {
+        if (err) {
+          console.log('Error identifying file size: ' + err)
+        } else {
+          console.log(filename + ' : ' + values)
+          aspect = (values.width / values.height)
+          widths.forEach(function(width, widthIndex) {
+            height = Math.round(width / aspect)
+            console.log('resizing ' + filename + 'to ' + height + 'x' + height)
+            this.resize(width, height).write(destination + 'w' + width + '_' + filename, function(err) {
+              if (err) console.log('Error writing file: ' + err)
+            })
+          }.bind(this))
+        }
+      })
+    })
+  }
+})
+          </code></pre>
+          <p style="text-align: right;"><small>
+            <em><a href="http://callbackhell.com">callbackhell.com</a></em><br>
+            Max Ogden</small>
+        </section>
+
+        <section>
+          <h2>Callbacks considered harmful</h2>
+          <blockquote cite="http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html">
+            <p>“My second remark is that our intellectual powers are rather
+            geared to master static relations and that our powers to visualize
+            processes evolving in time are relatively poorly developed.
+            […]
+            <p>The go to statement as it stands is just too primitive; it is
+            too much an invitation to make a mess of one's program.”
+          </blockquote>
+          <p style="text-align: right;"><small>
+            <em>Go To Statement Considered Harmful</em><br>
+            Edsger W. Dijkstra</small>
+        </section>
+
+        <section>
+          <h2>Escaping hell is possible</h2>
+          <blockquote cite="http://tirania.org/blog/archive/2013/Aug-15.html">
+            <p>“Just like in the Go To days, or the days of manual memory management, we are
+turning into glorified accountants. Check every code path for the proper state
+to be properly reset, updated, disposed, released.
+<p>Surely as a species we can do better than this.”
+          </blockquote>
+          <p style="text-align: right;"><small>
+            <em>Callbacks as our Generations' Go To Statement</em><br>
+            Miguel de Icaza</small>
+        </section>
+
+        <section>
+          <h2>Callback hell (in C#)</h2>
+          <pre class="stretch" style="font-size: small;"><code data-trim >
+private void SnapAndPost () {
+    Busy = true;
+    UpdateUIStatus ("Taking a picture");
+    var picker = new Xamarin.Media.MediaPicker ();
+    var picTask = picker.TakePhotoAsync (new Xamarin.StoreCameraMediaOptions ());
+    picTask.ContinueWith ((picRetTask) => {
+        InvokeOnMainThread (() => {
+            if (picRetTask.IsCanceled) {
+                Busy = false;
+                UpdateUIStatus ("Canceled");
+            } else {
+                var tagsCtrl = new GetTagsUIViewController (picRetTask.Result.GetStream ());
+                PresentViewController (tagsCtrl, true, () => {
+                    UpdateUIStatus ("Submitting picture to server");
+                    var uploadTask = new Task (() => {
+                        return PostPicToService (picRetTask.Result.GetStream (), tagsCtrl.Tags);
+                    });
+                    uploadTask.ContinueWith ((uploadRetTask) => {
+                        InvokeOnMainThread (() => {
+                            Busy = false;
+                            UpdateUIStatus (uploadRetTask.Result.Failed ? "Canceled" : "Success");
+                        });
+                    });
+                    uploadTask.Start ();
+                });
+            }
+        });
+    });
+}
+          </code></pre>
+          <p style="text-align: right;"><small>
+            <em>Major upgrades to Xamarin’s platform: Async is here</em><br>
+            Miguel de Icaza</small>
+        </section>
+
+        <section>
+          <h2>Async/await version (in C#)</h2>
+          <pre style="font-size: large;"><code data-trim >
+private async Task SnapAndPostAsync () {
+  try {
+    Busy = true;
+    UpdateUIStatus ("Taking a picture");
+    var picker = new Xamarin.Media.MediaPicker ();
+    var mFile = await picker.TakePhotoAsync (new Xamarin.StoreCameraMediaOptions ());
+    var tagsCtrl = new GetTagsUIViewController (mFile.GetStream ());
+    await PresentViewControllerAsync (tagsCtrl, true);
+    UpdateUIStatus ("Submitting picture to server");
+    await PostPicToServiceAsync (mFile.GetStream (), tagsCtrl.Tags);
+    UpdateUIStatus ("Success");
+  } catch (OperationCanceledException) {
+    UpdateUIStatus ("Canceled");
+  } finally {
+    Busy = false;
+  }
+}
+          </code></pre>
+          <p style="text-align: right;"><small>
+            <em>Major upgrades to Xamarin’s platform: Async is here</em><br>
+            Miguel de Icaza</small>
+        </section>
+
+        <section>
+          <p>Javascript does not have async/await (yet).
+          <p>But <strong>we can build an equivalent from scratch</strong> using:
+          <ol>
+            <li>Promises</li>
+            <li> Generators</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>Promises</h2>
+        </section>
+
+        <section>
+          <h2>Generators</h2>
+        </section>
+
+
+        <section>
+          <h2>Other languages</h2>
+        </section>
+
+
         <!--
         <section>
           <h2>Hello There</h2>
