@@ -116,6 +116,15 @@ fs.readdir(source, function(err, files) {
         </section>
 
         <section>
+          <h2>Callbacks are hard</h2>
+          <ul>
+            <li>Hard to read: broken control-flow</li>
+            <li>Hard to write: manual data-flow</li>
+            <li>Hard to debug: no stack</li>
+          </ul>
+        </section>
+
+        <section>
           <h2>Callbacks considered harmful</h2>
           <blockquote cite="http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html">
             <p>“My second remark is that our intellectual powers are rather
@@ -219,6 +228,144 @@ private async Task SnapAndPostAsync () {
 
         <section>
           <h2>Promises</h2>
+        </section>
+
+        <section>
+          <pre><code data-trim >
+function doSomething(callback) {
+  var value = 42;
+  callback(value);
+}
+
+doSomething(function(value) {
+  console.log('Got a value:' + value);
+});
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>A bit of syntactic sugar</h2>
+          <pre><code data-trim >
+function doSomething(callback) {
+  var value = 42;
+  callback(value);
+}
+doSomething(function(value) {
+  console.log('Got a value:' + value);
+});
+          </code></pre>
+          <pre class="fragment"><code data-trim >
+function doSomething() {
+  return {
+    then: function(callback) {
+      var value = 42;
+      callback(value);
+    }
+  };
+}
+var promise = doSomething();
+promise.then(function(value) {
+  console.log('Got a value:' + value);
+});
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>Promises capture the notion of an eventual value into an object.</h3>
+        </section>
+
+        <section>
+          <h2>A Promise type</h2>
+          <pre><code data-trim >
+function Promise(fn) {
+  var callback = null;
+  this.then = function(cb) {
+    callback = cb;
+  };
+
+  function resolve(value) {
+    callback(value);
+  }
+
+  fn(resolve);
+}
+          </code></pre>
+          <pre class="fragment"><code data-trim>
+function doSomething() {
+  return new Promise(function(resolve) {
+    var value = 42;
+    resolve(value);
+  });
+}
+          </code></pre>
+          <p class="fragment">Problem: <code>callback</code> called too early (before <code>then()</code>).
+        </section>
+
+        <section>
+          <h2>Promises have state</h2>
+          <ul>
+            <li>A promise can be <strong>pending</strong> waiting for a value,
+            or <strong>resolved</strong> with a value.</li>
+            <li>A promise invokes its callback when <strong>both</strong> the
+              callback and the resolved value are available.</li>
+          </ul>
+        </section>
+
+        <section>
+          <pre class="stretch"><code data-trim>
+function Promise(fn) {
+  var state = 'pending', value, deferred;
+
+  function handle(onResolved) { /* invoke callback if its time has come */
+    if(state === 'pending') {
+      deferred = onResolved;
+      return;
+    }
+    onResolved(value);
+  }
+
+  function resolve(newValue) { /* resolve should only be called once! */
+    value = newValue;
+    state = 'resolved';
+    if(deferred) {
+      handle(deferred);
+    }
+  }
+
+  this.then = function(onResolved) {
+    handle(onResolved);
+  };
+
+  fn(resolve);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Back to our first example</h2>
+          <pre><code data-trim >
+function getPhoto(tag, handlerCallback) {
+  asyncGet(requestTag(tag), function(photoList) {
+    asyncGet(requestOneFrom(photoList), function(photoSizes) {
+      handlerCallback(sizesToPhoto(photoSizes));
+    });
+  });
+}
+getPhoto('tokyo', drawOnScreen);
+          </code></pre>
+          <pre><code data-trim >
+function getPhoto(tag) {
+  return new Promise(function(resolve) {
+    asyncGet(requestTag(tag), function(photoList) {
+      asyncGet(requestOneFrom(photoList), function(photoSizes) {
+        resolve(sizesToPhoto(photoSizes));
+      });
+    });
+  }
+}
+getPhoto('tokyo').then(drawOnScreen);
+          </code></pre>
+          <p>Not much better…</p>
         </section>
 
         <section>
