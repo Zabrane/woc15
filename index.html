@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="css/theme/beige.css" id="theme">
 
     <!-- Code syntax highlighting -->
+    <!-- TODO: maybe black on white is easier to read for the code on the slides -->
     <link rel="stylesheet" href="lib/css/zenburn.css">
 
     <!-- Printing and PDF exports -->
@@ -83,7 +84,7 @@ getPhoto('tokyo', drawOnScreen);
         </section>
 
         <section>
-          <h2>“Callback hell”</h2>
+          <h2>“Callback hell” (a typical example)</h2>
           <pre style="font-size: small;"><code class="js" data-trim >
 fs.readdir(source, function(err, files) {
   if (err) {
@@ -150,11 +151,14 @@ to be properly reset, updated, disposed, released.
           <p style="text-align: right;"><small>
             <em>Callbacks as our Generations' Go To Statement</em><br>
             Miguel de Icaza</small>
+          <aside class="notes">Peut-être la partie sur C# peut être introduite
+            en disant qu'on peut se passer des callback (exemple en C#) et
+            montrer coment on peut construire ça en Javascript.</aside>
         </section>
 
         <section>
           <h2>Callback hell (in C#)</h2>
-          <pre class="stretch" style="font-size: small;"><code class="js" data-trim >
+          <pre class="stretch" style="font-size: small;"><code class="cs" data-trim >
 private void SnapAndPost () {
     Busy = true;
     UpdateUIStatus ("Taking a picture");
@@ -192,7 +196,7 @@ private void SnapAndPost () {
 
         <section>
           <h2>Async/await version (in C#)</h2>
-          <pre style="font-size: large;"><code class="js" data-trim >
+          <pre style="font-size: large;"><code class="cs" data-trim >
 private async Task SnapAndPostAsync () {
   try {
     Busy = true;
@@ -734,9 +738,9 @@ function spawn(generatorFunc) {
           <h2>Python</h2>
           <ul>
             <li>PEP 255 - Simple Generators.</li>
-            <li>[…]</li>
             <li>PEP 3148 - futures - execute computations asynchronously.</li>
             <li>PEP 3156 - Asynchronous IO Support Rebooted: <quote>“a coroutine is a generator that follows certain conventions”</quote>.</li>
+            <li><small>Or the Twisted library.</small></li>
           </ul>
         </section>
 
