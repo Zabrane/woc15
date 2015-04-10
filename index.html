@@ -57,7 +57,7 @@
 
         <section>
           <h2>Callbacks</h2>
-          <pre><code data-trim >
+          <pre><code class="js" data-trim >
 function getPhoto(tag) {
     var photoList  = syncGet(requestTag(tag));
     var photoSizes = syncGet(requestOneFrom(photoList));
@@ -66,7 +66,7 @@ function getPhoto(tag) {
 
 drawOnScreen(getPhoto('tokyo'));
           </code></pre>
-          <pre class="fragment"><code data-trim >
+          <pre class="fragment"><code class="js" data-trim >
 function getPhoto(tag, handlerCallback) {
   asyncGet(requestTag(tag), function(photoList) {
     asyncGet(requestOneFrom(photoList), function(photoSizes) {
@@ -84,7 +84,7 @@ getPhoto('tokyo', drawOnScreen);
 
         <section>
           <h2>“Callback hell”</h2>
-          <pre style="font-size: small;"><code data-trim >
+          <pre style="font-size: small;"><code class="js" data-trim >
 fs.readdir(source, function(err, files) {
   if (err) {
     console.log('Error finding files: ' + err)
@@ -154,7 +154,7 @@ to be properly reset, updated, disposed, released.
 
         <section>
           <h2>Callback hell (in C#)</h2>
-          <pre class="stretch" style="font-size: small;"><code data-trim >
+          <pre class="stretch" style="font-size: small;"><code class="js" data-trim >
 private void SnapAndPost () {
     Busy = true;
     UpdateUIStatus ("Taking a picture");
@@ -192,7 +192,7 @@ private void SnapAndPost () {
 
         <section>
           <h2>Async/await version (in C#)</h2>
-          <pre style="font-size: large;"><code data-trim >
+          <pre style="font-size: large;"><code class="js" data-trim >
 private async Task SnapAndPostAsync () {
   try {
     Busy = true;
@@ -231,7 +231,8 @@ private async Task SnapAndPostAsync () {
         </section>
 
         <section>
-          <pre><code data-trim >
+          <h2>A minimal callback example</h2>
+          <pre><code class="js" data-trim >
 function doSomething(callback) {
   var value = 42;
   callback(value);
@@ -241,11 +242,14 @@ doSomething(function(value) {
   console.log('Got a value:' + value);
 });
           </code></pre>
+          <p style="text-align: right;"><small>
+            <em>JavaScript Promises… in wicked detail</em><br>
+            Matt Greer</small>
         </section>
 
         <section>
           <h2>A bit of syntactic sugar</h2>
-          <pre><code data-trim >
+          <pre><code class="js" data-trim >
 function doSomething(callback) {
   var value = 42;
   callback(value);
@@ -254,8 +258,8 @@ doSomething(function(value) {
   console.log('Got a value:' + value);
 });
           </code></pre>
-          <pre class="fragment"><code data-trim >
-function doSomething() {
+          <pre class="fragment"><code class="js" data-trim >
+function doSomething() { /* returns a Promise object */
   return {
     then: function(callback) {
       var value = 42;
@@ -276,7 +280,7 @@ promise.then(function(value) {
 
         <section>
           <h2>A Promise type</h2>
-          <pre><code data-trim >
+          <pre><code class="js" data-trim >
 function Promise(fn) {
   var callback = null;
   this.then = function(cb) {
@@ -290,7 +294,7 @@ function Promise(fn) {
   fn(resolve);
 }
           </code></pre>
-          <pre class="fragment"><code data-trim>
+          <pre class="fragment"><code class="js" data-trim>
 function doSomething() {
   return new Promise(function(resolve) {
     var value = 42;
@@ -312,7 +316,7 @@ function doSomething() {
         </section>
 
         <section>
-          <pre class="stretch"><code data-trim>
+          <pre class="stretch"><code class="js" data-trim>
 function Promise(fn) {
   var state = 'pending', value, deferred;
 
@@ -324,7 +328,7 @@ function Promise(fn) {
     onResolved(value);
   }
 
-  function resolve(newValue) { /* resolve should only be called once! */
+  function resolve(newValue) { /* resolve should be called only once! */
     value = newValue;
     state = 'resolved';
     if(deferred) {
@@ -343,7 +347,7 @@ function Promise(fn) {
 
         <section>
           <h2>Back to our first example</h2>
-          <pre><code data-trim >
+          <pre><code class="js" data-trim >
 function getPhoto(tag, handlerCallback) {
   asyncGet(requestTag(tag), function(photoList) {
     asyncGet(requestOneFrom(photoList), function(photoSizes) {
@@ -353,7 +357,7 @@ function getPhoto(tag, handlerCallback) {
 }
 getPhoto('tokyo', drawOnScreen);
           </code></pre>
-          <pre><code data-trim >
+          <pre><code class="js" data-trim >
 function getPhoto(tag) {
   return new Promise(function(resolve) {
     asyncGet(requestTag(tag), function(photoList) {
@@ -369,7 +373,271 @@ getPhoto('tokyo').then(drawOnScreen);
         </section>
 
         <section>
+          <h2>What if all async functions used promises?</h2>
+          <pre><code class="js" data-trim >
+function getPhoto(tag) {
+  return new Promise(function(resolve) {
+    promiseGet(requestTag(tag)).then(function(photoList) {
+      promiseGet(requestOneFrom(photoList)).then(function(photoSizes) {
+        resolve(sizesToPhoto(photoSizes));
+      });
+    });
+  }
+}
+
+getPhoto('tokyo').then(drawOnScreen);
+          </code></pre>
+        <p>Still not good…</p>
+        </section>
+
+        <section>
+          <h2>What if then() returned a promise too?</h2>
+          <pre><code class="js" data-trim >
+function getPhoto(tag) {
+  promiseGet(requestTag(tag))
+    .then(requestOneFrom)
+    .then(promiseGet)
+    .then(sizesToPhoto);
+}
+
+getPhoto('tokyo').then(drawOnScreen);
+          </code></pre>
+          <p>No need to call <code>resolve()</code> anymore,<br>normal <code>return</code> works.
+        </section>
+
+        <section>
+          <h2>Chaining promises</h2>
+          <pre><code class="js" data-trim>
+this.then = function(onResolved) { /* then returns a promise */
+  return new Promise(function(resolve) {
+    handle({ /* handle will pass onResolved result to resolve */
+      onResolved: onResolved,
+      resolve: resolve
+    });
+  });
+};
+
+function handle(handler) {
+  if(state === 'pending') {
+    deferred = handler;
+    return;
+  }
+  var ret = handler.onResolved(value);
+  handler.resolve(ret);
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h3>What about exceptions?</h3>
+        </section>
+
+        <section>
+          <h2>Rejecting promises</h2>
+          <p>Promises can not only be pending or resolved, but also
+          <strong>rejected</strong> (with a “reason”).
+          <p>This allows to simulate exceptions with a second chain of callbacks for error cases.
+          <pre><code class="js" data-trim>
+function doSomething() {
+  return new Promise(function(resolve, reject) {
+    var result = somehowGetTheValue();
+    if(result.error) {
+      reject(result.error);  /* ~ throw result.error */
+    } else {
+      resolve(result.value); /* ~ return result.value */
+    }
+  });
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <pre class="stretch"><code class="js" data-trim>
+function Promise(fn) {
+  /* ... */
+
+  function reject(reason) { /* reject is similar to resolve */
+    state = 'rejected';
+    value = reason;
+
+    if(deferred) {
+      handle(deferred);
+    }
+  }
+
+  this.then = function(onResolved, onRejected) { /* then expects two callbacks */
+    return new Promise(function(resolve, reject) {
+      handle({ /* pass new callback for rejection to handler */
+        onResolved: onResolved,
+        onRejected: onRejected,
+        resolve: resolve,
+        reject: reject
+      });
+    });
+  };
+
+  fn(resolve, reject);
+          </code></pre>
+        </section>
+
+        <section>
+          <pre><code class="js" data-trim>
+  function handle(handler) {
+    if(state === 'pending') {
+      deferred = handler;
+      return;
+    }
+
+    var handlerCallback;
+    if(state === 'resolved') {
+      handlerCallback = handler.onResolved;
+    } else { /* state === 'rejected' */
+      handlerCallback = handler.onRejected;
+    }
+
+    var ret = handlerCallback(value);
+    handler.resolve(ret);
+  }
+}
+          </code></pre>
+        </section>
+
+
+        <section>
+          <p>That's it, we're done.
+          <p class="fragment">Almost done…
+        </section>
+
+        <section> <!-- The bonus track is hidden in nested slides -->
+        <section data-background="img/spec.png">
+          <h3>Bonus track</h3>
+          <h4>Ironing out the details</h4>
+        </section>
+
+        <section>
+          <h2>Make callbacks optionnal</h2>
+          <p>If one of the callbacks to <code>then()</code> is
+          <code>null</code>, the identity function is used implicitly.</p>
+          <p>This avoids in particular specifying an error callback if you don't care.
+          <pre><code class="js" data-trim>
+/* In handle(), add: */
+
+if(!handlerCallback) {
+  if(state === 'resolved') {
+    handler.resolve(value);
+  } else {
+    handler.reject(value);
+  }
+  return;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Recognize promises returned inside the chain</h2>
+          <p>Remember our example:
+          <pre><code class="js" data-trim >
+promiseGet(requestTag(tag))
+  .then(requestOneFrom)
+  .then(promiseGet) /* promiseGet returns a promise! */
+  .then(sizesToPhoto);
+          </code></pre>
+          Solution:
+          <pre><code class="js" data-trim >
+/* In resolve(), "guess" if we get a promise: */
+if(newValue && typeof newValue.then === 'function') {
+  newValue.then(resolve);
+  return;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Catch exceptions during resolution</h2>
+          <p>If one of your functions throws an exception, catch it and reject the current promise.
+          <pre><code class="js" data-trim >
+/* In handle(), do: */
+try {
+  ret = handlerCallback(value);
+} catch(e) {
+  handler.reject(e);
+  return;
+}
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Support multiple calls to then()</h2>
+          <p>Accumulate deferred handlers in an array, and iterate during resolution.
+          <pre><code class="js" data-trim >
+/* In handle(): */
+deferreds.push(deferred);
+          </code></pre>
+          <pre><code class="js" data-trim >
+/* In resolve(): */
+for (var i = 0, len = deferreds.length; i < len; i++)
+  handle(deferreds[i]);
+deferreds = null;
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Be paranoid about resolution</h2>
+          <p>Prevent multiple calls to <code>resolve()</code> or <code>reject()</code>.
+          <pre class="stretch"><code class="js" data-trim>
+function doResolve(fn, onFulfilled, onRejected) {
+  var done = false;
+  try {
+    fn(function (value) {
+      if (done) return
+      done = true
+      onFulfilled(value)
+    }, function (reason) {
+      if (done) return
+      done = true
+      onRejected(reason)
+    })
+  } catch (ex) {
+    if (done) return
+    done = true
+    onRejected(ex)
+  }
+}
+doResolve(fn, resolve, reject);
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Resolve promise asynchronously</h2>
+          <p>Problem: there is an ambiguity in resolution.
+          <pre><code class="js" data-trim >
+var promise = doAnOperation();
+invokeSomething();
+promise.then(wrapItAllUp); /* when is wrapItAllUp executed? */
+invokeSomethingElse();
+          </code></pre>
+          <p>Solution: always resolve asynchronously.
+          <pre><code class="js" data-trim >
+/* In handle(), add: */
+setTimeout(function() {
+  /* ... as before */
+}, 1);
+          </code></pre>
+
+
+        </section>
+        </section> <!-- End of bonus track -->
+
+        <section>
+          <p>That's really it.
+          <p>We have re-implemented the then/promise library (<a
+            href="https://github.com/then/promise/blob/ddc3b82aada66710e970e7b1df31b85fb6c412ca/lib/core.js">lib/core.js@ddc3b82aad</a>).
+          <p>But we still have callbacks, only made (a lot more) manageable.
+        </section>
+
+        <section>
           <h2>Generators</h2>
+          <h4>and coroutines</h4>
         </section>
 
 
