@@ -228,6 +228,7 @@ private async Task SnapAndPostAsync () {
 
         <section>
           <h2>Promises</h2>
+          <h4>(also called Futures)</h4>
         </section>
 
         <section>
@@ -640,6 +641,79 @@ setTimeout(function() {
           <h4>and coroutines</h4>
         </section>
 
+
+        <section>
+          <h2>Generators</h2>
+          <p>Generators allow functions to exit at a particular point, like
+          <code>return</code>, but later resume <strong>from the same point and
+            state</strong>.
+          <pre><code data-trim class="js">
+function* addGenerator() { // function* creates a generator
+  var i = 0;
+  while (true) {
+    i += yield i; // suspend execution, returning i
+  }
+}
+
+// Initialize the generator
+var adder = addGenerator();
+adder.next().value; // 0
+// next() can resume yield with a value
+adder.next(5).value; // 5
+adder.next(7).value; // 12
+          </code></pre>
+          <p style="text-align: right;"><small>
+            <em>JavaScript Promises: There and Back Again</em><br>
+            Jake Archibald</small>
+        </section>
+
+        <section>
+          <h2>Back to direct style</h2>
+          <pre><code class="js" data-trim >
+function getPhoto(tag) {
+    var photoList  = syncGet(requestTag(tag));
+    var photoSizes = syncGet(requestOneFrom(photoList));
+    return sizesToPhoto(photoSizes);
+}
+
+drawOnScreen(getPhoto('tokyo'));
+          </code></pre>
+          <pre class="fragment"><code class="js" data-trim >
+function* getPhoto(tag) {
+    var photoList  = yield promiseGet(requestTag(tag));
+    var photoSizes = yield promiseGet(requestOneFrom(photoList));
+    return sizesToPhoto(photoSizes);
+}
+
+var promise = spawn(getPhoto('tokyo'));
+promise.then(drawOnScreen);
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>The magic of spawn</h2>
+          <pre class="stretch"><code class="js" data-trim >
+function spawn(generatorFunc) {
+  function continuer(verb, arg) {
+    var result;
+    try {
+      result = generator[verb](arg);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+    if (result.done) {
+      return result.value;
+    } else {
+      return Promise.resolve(result.value).then(onFulfilled, onRejected);
+    }
+  }
+  var generator = generatorFunc();
+  var onFulfilled = continuer.bind(continuer, "next");
+  var onRejected = continuer.bind(continuer, "throw");
+  return onFulfilled();
+}
+          </code></pre>
+        </section>
 
         <section>
           <h2>Can I throw away my callbacks today?</h2>
