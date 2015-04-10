@@ -317,6 +317,7 @@ function doSomething() {
         </section>
 
         <section>
+          <!-- TODO: Explain the JS threading model, people who don;t know it will think there is a race condition -->
           <pre class="stretch"><code class="js" data-trim>
 function Promise(fn) {
   var state = 'pending', value, deferred;
@@ -395,7 +396,7 @@ getPhoto('tokyo').then(drawOnScreen);
           <h2>What if then() returned a promise too?</h2>
           <pre><code class="js" data-trim >
 function getPhoto(tag) {
-  promiseGet(requestTag(tag))
+  return promiseGet(requestTag(tag))
     .then(requestOneFrom)
     .then(promiseGet)
     .then(sizesToPhoto);
@@ -622,7 +623,7 @@ invokeSomethingElse();
 /* In handle(), add: */
 setTimeout(function() {
   /* ... as before */
-}, 1);
+}, 0);
           </code></pre>
 
 
